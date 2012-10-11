@@ -1,6 +1,7 @@
 var express = require('express')
   , everyauth = require('../index')
-  , conf = require('./conf');
+  , conf = require('./conf')
+  , everyauthRoot = __dirname + '/..';
 
 everyauth.debug = true;
 
@@ -357,6 +358,18 @@ everyauth['500px']
   })
   .redirectPath('/');
 
+everyauth
+  .mixi
+    .appId(conf.mixi.consumerKey)
+    .appSecret(conf.mixi.consumerSecret)
+    .scope(conf.mixi.scope)
+    .display('pc')
+    .findOrCreateUser( function (session, accessToken, accessTokenExtra, mixiUserMetadata) {
+      return usersByFbId[mixiUserMetadata.id] ||
+        (usersByFbId[mixiUserMetadata.id] = addUser('mixi', mixiUserMetadata));
+    })
+    .redirectPath('/');
+
 var app = express.createServer(
     express.bodyParser()
   , express.static(__dirname + "/public")
@@ -368,6 +381,7 @@ var app = express.createServer(
 
 app.configure( function () {
   app.set('view engine', 'jade');
+  app.set('views', everyauthRoot + '/example/views');
 });
 
 app.get('/', function (req, res) {
@@ -379,3 +393,5 @@ everyauth.helpExpress(app);
 app.listen(3000);
 
 console.log('Go to http://local.host:3000');
+
+module.exports = app;
